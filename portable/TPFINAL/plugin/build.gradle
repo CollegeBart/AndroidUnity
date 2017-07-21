@@ -1,0 +1,66 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.3"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    provided fileTree(include: ['*.jar'], dir: 'libs')
+}
+
+// some custom tasks to install into the Unity project
+task cleanDebugPlugin(type: Delete)
+task cleanReleasePlugin(type: Delete)
+task installDebugPlugin(type: Copy)
+task installReleasePlugin(type: Copy)
+
+cleanDebugPlugin.group = "build"
+cleanReleasePlugin.group = "build"
+installDebugPlugin.group = "install"
+installReleasePlugin.group = "install"
+
+cleanDebugPlugin {
+    delete "../../Assets/Plugins/Android/plugin-debug.aar"
+}
+cleanReleasePlugin {
+    delete "../../Assets/Plugins/Android/plugin-release.aar"
+}
+installDebugPlugin {
+    from "build/outputs/aar"
+    into "../../Assets/Plugins/Android"
+    include "plugin-debug.aar"
+}
+installReleasePlugin {
+    from "build/outputs/aar"
+    into "../../Assets/Plugins/Android"
+    include "plugin-release.aar"
+}
+
+// note that debug depends on cleaning release, and vice versa, to prevent having two different copies
+installDebugPlugin.dependsOn("assembleDebug", "cleanReleasePlugin")
+installReleasePlugin.dependsOn("assembleRelease", "cleanDebugPlugin")
+
+// Android Studio adds its task after reading this file, so set finalizedBy on task-added event
+tasks.whenTaskAdded { task ->
+    if (task.name == "assembleDebug") {
+        task.finalizedBy installDebugPlugin
+    }
+    else if (task.name == "assembleRelease") {
+        task.finalizedBy installReleasePlugin
+    }
+}

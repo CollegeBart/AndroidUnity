@@ -29,8 +29,11 @@ public class ActionButton : MonoBehaviour
     int resourcesPerClick = 1;
     int startingEnergy = 10;
     int currentEnergy;
-    float hours = 12 * 3600.0f;
+    int explosiveEnergy = 10;
+    public float hours = 12 * 3600.0f;
     float startTime;
+    float cost = 10.0f;
+    float m_cost;
 
 	void Start ()
     {
@@ -50,21 +53,49 @@ public class ActionButton : MonoBehaviour
         startTime += Time.deltaTime;
 	}
 
-    private void UpdateExBtn()
+    public void UpdateExBtn()
     {
-        currentEnergy -= 4;
-        ExplosivesResources += resourcesPerClick;
-        diamResources += resourcesPerClick * (int)(startTime+4);
+        if(currentEnergy >= explosiveEnergy)
+        {
+            currentEnergy -= explosiveEnergy;
+            ExplosivesResources += resourcesPerClick;
+            cost = Mathf.Round(cost * 1.15f);
+            m_cost = Mathf.Pow(cost, m_cost = cost);
+            resourcesPerClick += explosiveEnergy;
+        }else if (currentEnergy < explosiveEnergy)
+        {
+            Explosivesbtn.interactable = false;
+        }
     }
 
-    private void UpdateBtnAxe()
+    public void UpdateBtnAxe()
     {
-        throw new NotImplementedException();
+        if (currentEnergy >= 5)
+        {
+            currentEnergy -= 5;
+            axeResources += resourcesPerClick;
+            cost = Mathf.Round(cost * 1.15f);
+            m_cost = Mathf.Pow(cost, m_cost = cost);
+            resourcesPerClick += 5;
+        }else if (currentEnergy < 5)
+        {
+            Axebtn.interactable = false;
+        }
     }
 
-    private void UpdateBtnPick()
+    public void UpdateBtnPick()
     {
-        throw new NotImplementedException();
+        if(currentEnergy >= 2)
+        {
+            currentEnergy -= 2;
+            pickAxeResources += resourcesPerClick;
+            cost = Mathf.Round(cost * 1.15f);
+            m_cost = Mathf.Pow(cost, m_cost = cost);
+            resourcesPerClick += 2;
+        }else if (currentEnergy < 2)
+        {
+            pickAxebtn.interactable = false;
+        }
     }
 
     void Update ()

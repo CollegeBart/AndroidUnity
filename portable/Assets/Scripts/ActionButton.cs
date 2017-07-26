@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class ActionButton : MonoBehaviour
 {
+    AndroidPlugin ap;
     public Button pickAxebtn;
     public Button Axebtn;
     public Button Explosivesbtn;
@@ -20,24 +21,23 @@ public class ActionButton : MonoBehaviour
     public Text diamondText;
     public Slider energySlid;
     public Text energyText;
-    int pickAxeResources = 0;
-    int axeResources = 0;
-    int ExplosivesResources = 0;
-    int woodResources = 0;
-    int stoneResources = 0;
-    int diamResources = 0;
-    int resourcesPerClick = 1;
-    int startingEnergy = 10;
-    int currentEnergy;
-    int explosiveEnergy = 10;
+    public int pickAxeResources = 0;
+    public int axeResources = 0;
+    public int ExplosivesResources = 0;
+    public int woodResources = 0;
+    public int stoneResources = 0;
+    public int diamResources = 0;
+    public int resourcesPerClick = 1;
+    public int startingEnergy = 10;
+    public int currentEnergy = 10;
+    public int explosiveEnergy = 10;
     public float hours = 12 * 3600.0f;
-    float startTime;
+    public float startTime;
     float cost = 10.0f;
     float m_cost;
 
 	void Start ()
     {
-        currentEnergy = startingEnergy;
         woodBtn = woodBtn.GetComponent<Button>();
         woodBtn.onClick.AddListener(UpdateBtnWood);
         stoneBtn = stoneBtn.GetComponent<Button>();
@@ -50,7 +50,7 @@ public class ActionButton : MonoBehaviour
         Axebtn.onClick.AddListener(UpdateBtnAxe);
         Explosivesbtn = Explosivesbtn.GetComponent<Button>();
         Explosivesbtn.onClick.AddListener(UpdateExBtn);
-        startTime += Time.deltaTime;
+        
 	}
 
     public void UpdateExBtn()
@@ -100,6 +100,7 @@ public class ActionButton : MonoBehaviour
 
     void Update ()
     {
+        startTime += Time.deltaTime;
         woodText.text = "Wood : " + woodResources;
         stoneText.text = "Stone : " + stoneResources;
         diamondText.text = "Diamond : " + diamResources;
@@ -109,7 +110,6 @@ public class ActionButton : MonoBehaviour
         ExplosivesTxt.text = "How Many Explosives : " + ExplosivesResources;
         energySlid.value = currentEnergy;
         DisableBtn();
-
         RegenerateEnergy();
 	}
 
@@ -135,7 +135,8 @@ public class ActionButton : MonoBehaviour
     {
         if(startTime >= hours)
         {
-            currentEnergy = 10;
+            ap.NotificationMethod();
+            currentEnergy = startingEnergy;
             startTime = 0;
         }
     }
@@ -160,6 +161,32 @@ public class ActionButton : MonoBehaviour
             Axebtn.interactable = true;
             Explosivesbtn.interactable = true;
         }
+    }
+
+
+    bool isPaused = false;
+    private void OnApplicationPause(bool pause)
+    {
+        isPaused = pause;
+        currentEnergy = PlayerPrefs.GetInt("Energy");
+        startTime = PlayerPrefs.GetFloat("TimeSpend");
+        diamResources = PlayerPrefs.GetInt("Diamond");
+        woodResources = PlayerPrefs.GetInt("Wood");
+        stoneResources = PlayerPrefs.GetInt("Stone");
+        pickAxeResources = PlayerPrefs.GetInt("PickAxe");
+        axeResources = PlayerPrefs.GetInt("Axe");
+        ExplosivesResources = PlayerPrefs.GetInt("Explosives");
+    }
+    private void OnApplicationQuit()
+    {
+        PlayerPrefs.SetInt("Energy", currentEnergy);
+        PlayerPrefs.SetFloat("TimeSpend", startTime);
+        PlayerPrefs.SetInt("Diamond", diamResources);
+        PlayerPrefs.SetInt("Wood", woodResources);
+        PlayerPrefs.SetInt("Stone",stoneResources);
+        PlayerPrefs.SetInt("PickAxe",pickAxeResources);
+        PlayerPrefs.SetInt("Axe",axeResources);
+        PlayerPrefs.SetInt("Explosives", ExplosivesResources);
     }
 
 

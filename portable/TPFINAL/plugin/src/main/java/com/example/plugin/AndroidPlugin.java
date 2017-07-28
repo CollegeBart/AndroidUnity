@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.view.View;
 
 
 import com.example.plugin.AlarmReceiver;
@@ -28,6 +29,8 @@ public class AndroidPlugin {
 
     }
 
+
+
     public static void ScheduleEnergyFull(long delay, String message, int id)
     {
         Intent intent = new Intent(UnityPlayer.currentActivity, AlarmReceiver.class);
@@ -35,7 +38,7 @@ public class AndroidPlugin {
         intent.putExtra("MESSAGE", message);
         PendingIntent penInten = PendingIntent.getBroadcast(UnityPlayer.currentActivity, id, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alrmManager = (AlarmManager) UnityPlayer.currentActivity.getSystemService(Context.ALARM_SERVICE);
-        alrmManager.setExact(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, penInten);
+        alrmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_HALF_DAY, AlarmManager.INTERVAL_HALF_DAY, penInten);
     }
 
     public static int GetExtraID() {

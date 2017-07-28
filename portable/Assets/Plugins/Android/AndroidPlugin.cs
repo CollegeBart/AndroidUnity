@@ -24,7 +24,7 @@ public class AndroidPlugin : MonoBehaviour {
     {
         using (AndroidJavaClass aJC = new AndroidJavaClass("com.example.a1630077.tpfinal"))
         {
-            aJC.CallStatic("ScheduleEnergyFull", 10000L, "Your energy is now full", 5997348);
+            aJC.CallStatic("ScheduleNotification", 43200000L, "Your energy is now full", 5997348);
         }
     }
 }

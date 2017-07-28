@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class ActionButton : MonoBehaviour
 {
-    AndroidPlugin ap;
+    public Button[] buttonList;
     public Button pickAxebtn;
     public Button Axebtn;
     public Button Explosivesbtn;
@@ -21,16 +21,20 @@ public class ActionButton : MonoBehaviour
     public Text diamondText;
     public Slider energySlid;
     public Text energyText;
-    public int pickAxeResources = 0;
-    public int axeResources = 0;
-    public int ExplosivesResources = 0;
-    public int woodResources = 0;
-    public int stoneResources = 0;
-    public int diamResources = 0;
-    public int resourcesPerClick = 1;
-    public int startingEnergy = 10;
-    public int currentEnergy = 10;
-    public int explosiveEnergy = 10;
+    private bool isFocused;
+    private int pickAxeResources = 0;
+    private int axeResources = 0;
+    private int ExplosivesResources = 0;
+    private int woodResources = 0;
+    private int stoneResources = 0;
+    private int diamResources = 0;
+    private int resourcesPerClick = 1;
+    private int startingEnergy = 10;
+    private int currentEnergy = 10;
+    private int explosiveEnergy = 10;
+    private int selectedButton = 0;
+    private long tempTime;
+    private float timeAway;
     public float hours = 12 * 3600.0f;
     public float startTime;
     float cost = 10.0f;
@@ -38,6 +42,22 @@ public class ActionButton : MonoBehaviour
 
 	void Start ()
     {
+        buttonList = new Button[5];
+
+        buttonList[0].image = GameObject.Find("DiamondButton").GetComponent<Image>();
+        buttonList[0].image.color = Color.yellow;
+        buttonList[1].image = GameObject.Find("StoneButton").GetComponent<Image>();
+        buttonList[1].image.color = Color.yellow;
+        buttonList[2].image = GameObject.Find("WoodButton").GetComponent<Image>();
+        buttonList[2].image.color = Color.yellow;
+        buttonList[3].image = GameObject.Find("PickAxeBtn").GetComponent<Image>();
+        buttonList[3].image.color = Color.yellow;
+        buttonList[4].image = GameObject.Find("AxeBtn").GetComponent<Image>();
+        buttonList[4].image.color = Color.yellow;
+        buttonList[5].image = GameObject.Find("ExplosiveBtn").GetComponent<Image>();
+        buttonList[5].image.color = Color.yellow;
+
+
         woodBtn = woodBtn.GetComponent<Button>();
         woodBtn.onClick.AddListener(UpdateBtnWood);
         stoneBtn = stoneBtn.GetComponent<Button>();
@@ -50,7 +70,6 @@ public class ActionButton : MonoBehaviour
         Axebtn.onClick.AddListener(UpdateBtnAxe);
         Explosivesbtn = Explosivesbtn.GetComponent<Button>();
         Explosivesbtn.onClick.AddListener(UpdateExBtn);
-        
 	}
 
     public void UpdateExBtn()
@@ -111,6 +130,29 @@ public class ActionButton : MonoBehaviour
         energySlid.value = currentEnergy;
         DisableBtn();
         RegenerateEnergy();
+        PlayerPrefs.Save();
+
+        if(Input.GetKey(KeyCode.LeftArrow))
+        {
+            MoveToNextButton();
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            MoveToPreviousButton();
+        }
+        if(Input.GetKey(KeyCode.UpArrow))
+        {
+            MoveToPreviousButton();
+            MoveToPreviousButton();
+            MoveToPreviousButton();
+        }
+        else if(Input.GetKey(KeyCode.DownArrow))
+        {
+            MoveToNextButton();
+            MoveToNextButton();
+            MoveToNextButton();
+        }
+
 	}
 
 
@@ -135,7 +177,6 @@ public class ActionButton : MonoBehaviour
     {
         if(startTime >= hours)
         {
-            ap.NotificationMethod();
             currentEnergy = startingEnergy;
             startTime = 0;
         }
@@ -163,12 +204,16 @@ public class ActionButton : MonoBehaviour
         }
     }
 
-
-    bool isPaused = false;
-    private void OnApplicationPause(bool pause)
+    private void Awake()
     {
-        isPaused = pause;
         currentEnergy = PlayerPrefs.GetInt("Energy");
+        if(PlayerPrefs.HasKey("Energy"))
+        {
+            tempTime = Convert.ToInt64(PlayerPrefs.GetString("Energy"));
+            timeAway = DateTime.Now.Subtract(DateTime.FromBinary(tempTime)).Seconds;
+        }
+        currentEnergy += (int)timeAway;
+        resourcesPerClick = PlayerPrefs.GetInt("Click");
         startTime = PlayerPrefs.GetFloat("TimeSpend");
         diamResources = PlayerPrefs.GetInt("Diamond");
         woodResources = PlayerPrefs.GetInt("Wood");
@@ -176,10 +221,37 @@ public class ActionButton : MonoBehaviour
         pickAxeResources = PlayerPrefs.GetInt("PickAxe");
         axeResources = PlayerPrefs.GetInt("Axe");
         ExplosivesResources = PlayerPrefs.GetInt("Explosives");
+        PlayerPrefs.Save();
     }
+
+    private void OnApplicationPause(bool pause)
+    {
+        if (pause)
+        {
+            PlayerPrefs.SetString("Energy", DateTime.Now.ToBinary().ToString());
+            PlayerPrefs.SetInt("Click", resourcesPerClick);
+            PlayerPrefs.SetInt("Energy", currentEnergy);
+            PlayerPrefs.SetFloat("TimeSpend", startTime);
+            PlayerPrefs.SetInt("Diamond", diamResources);
+            PlayerPrefs.SetInt("Wood", woodResources);
+            PlayerPrefs.SetInt("Stone", stoneResources);
+            PlayerPrefs.SetInt("PickAxe", pickAxeResources);
+            PlayerPrefs.SetInt("Axe", axeResources);
+            PlayerPrefs.SetInt("Explosives", ExplosivesResources);
+            long timeb4alarm = (long)(startingEnergy - currentEnergy) * 1000L;
+            using (AndroidJavaClass aJC = new AndroidJavaClass("com.example.a1630077.tpfinal"))
+            {
+                aJC.CallStatic("ScheduleNotification", timeb4alarm, "Your energy is now full", 5997348);
+            }
+            PlayerPrefs.Save();
+        }
+    }
+
     private void OnApplicationQuit()
     {
+        PlayerPrefs.SetString("Energy", DateTime.Now.ToBinary().ToString());
         PlayerPrefs.SetInt("Energy", currentEnergy);
+        PlayerPrefs.SetInt("Click", resourcesPerClick);
         PlayerPrefs.SetFloat("TimeSpend", startTime);
         PlayerPrefs.SetInt("Diamond", diamResources);
         PlayerPrefs.SetInt("Wood", woodResources);
@@ -187,6 +259,60 @@ public class ActionButton : MonoBehaviour
         PlayerPrefs.SetInt("PickAxe",pickAxeResources);
         PlayerPrefs.SetInt("Axe",axeResources);
         PlayerPrefs.SetInt("Explosives", ExplosivesResources);
+        long timeb4alarm = (long)(startingEnergy - currentEnergy) * 1000L;
+        using (AndroidJavaClass aJC = new AndroidJavaClass("com.example.a1630077.tpfinal"))
+        {
+            aJC.CallStatic("ScheduleNotification", timeb4alarm , "Your energy is now full", 5997348);
+        }
+        PlayerPrefs.Save();
+        //PlayerPrefs.DeleteAll();
+    }
+
+    private void OnApplicationFocus(bool focus)
+    {
+        focus = isFocused;
+        if(focus)
+        {
+            currentEnergy = PlayerPrefs.GetInt("Energy");
+            if (PlayerPrefs.HasKey("Energy"))
+            {
+                tempTime = Convert.ToInt64(PlayerPrefs.GetString("Energy"));
+                timeAway = DateTime.Now.Subtract(DateTime.FromBinary(tempTime)).Seconds;
+            }
+            currentEnergy += (int)timeAway;
+            resourcesPerClick = PlayerPrefs.GetInt("Click");
+            startTime = PlayerPrefs.GetFloat("TimeSpend");
+            diamResources = PlayerPrefs.GetInt("Diamond");
+            woodResources = PlayerPrefs.GetInt("Wood");
+            stoneResources = PlayerPrefs.GetInt("Stone");
+            pickAxeResources = PlayerPrefs.GetInt("PickAxe");
+            axeResources = PlayerPrefs.GetInt("Axe");
+            ExplosivesResources = PlayerPrefs.GetInt("Explosives");
+            PlayerPrefs.Save();
+        }
+    }
+
+
+    void MoveToNextButton()
+    {
+        buttonList[selectedButton].image.color = Color.white;
+        selectedButton++;
+        if (selectedButton >= buttonList.Length)
+        {
+            selectedButton = 0;
+        }
+        buttonList[selectedButton].image.color = Color.yellow;
+    }
+
+    void MoveToPreviousButton()
+    {
+        buttonList[selectedButton].image.color = Color.white;
+        selectedButton--;
+        if (selectedButton < 0)
+        {
+            selectedButton = (buttonList.Length - 1);
+        }
+        buttonList[selectedButton].image.color = Color.yellow;
     }
 
 
